@@ -497,13 +497,14 @@ function parseMonthlyWeekday(raw) {
 }
 
 function splitMultipleTasks(raw) {
-  // 只有在有明確多個日期時才拆分，避免把單一相對日期拆壞
-  const dateCount = (raw.match(/\d{1,2}[\/\-月]\d{1,2}/g) || []).length;
-  const relCount = (raw.match(/下下?(禮拜|星期|週|周)/g) || []).length;
-  if (dateCount + relCount <= 1) return [raw.trim()];
-
-  const parts = raw.split(/(?=\d{1,2}[\/\-月]\d{1,2}|下下?禮拜|下下?週|下下?星期)/);
-  return parts.map(p => p.trim()).filter(p => p.length > 0);
+  // 以「日期開頭」來切分，每個日期後面跟著的文字都算同一個任務
+  const regex = /(\d{1,2}[\/\-月]\d{1,2}日?[^0-9月\/\-]*?)(?=\d{1,2}[\/\-月]\d{1,2}|$)/g;
+  const matches = raw.match(regex);
+  if (matches && matches.length > 1) {
+    return matches.map(m => m.trim()).filter(m => m.length > 0);
+  }
+  // 沒有明確多個日期就當單一任務
+  return [raw.trim()];
 }
 
 function parseRelativeDate(text) {
